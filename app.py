@@ -15,11 +15,19 @@ def get_db():
     return conn
 
 def get_base_url():
+    # First priority: SITE_URL environment variable set in Railway
+    env_url = os.environ.get("SITE_URL", "").rstrip("/")
+    if env_url:
+        return env_url
+    # Second: saved in settings
     db = get_db()
     row = db.execute("SELECT value FROM settings WHERE key='base_url'").fetchone()
     if row and row["value"]:
         return row["value"].rstrip("/")
-    return request.host_url.rstrip("/")
+    # Fallback: derive from request headers (Railway sets these)
+    scheme = request.headers.get("X-Forwarded-Proto", "https")
+    host = request.headers.get("X-Forwarded-Host", request.host)
+    return f"{scheme}://{host}"
 
 def init_db():
     with get_db() as db:
