@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RSVP Dashboard</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    header {
+      margin-bottom: 2.5rem;
+    }
+
+    header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #f8fafc;
+    }
+
+    header p {
+      color: #64748b;
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .stat-card {
+      background: #1e2330;
+      border: 1px solid #2d3448;
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+    }
+
+    .stat-card .label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #64748b;
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-card .value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #f8fafc;
+      line-height: 1;
+    }
+
+    .stat-card .value.green { color: #4ade80; }
+    .stat-card .value.blue  { color: #60a5fa; }
+
+    section {
+      margin-bottom: 2.5rem;
+    }
+
+    section h2 {
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #94a3b8;
+      margin-bottom: 1rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+
+    thead tr {
+      border-bottom: 1px solid #2d3448;
+    }
+
+    thead th {
+      text-align: left;
+      padding: 0.625rem 1rem;
+      color: #64748b;
+      font-weight: 500;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid #1a1f2e;
+      transition: background 0.1s;
+    }
+
+    tbody tr:hover { background: #1e2330; }
+
+    tbody td {
+      padding: 0.75rem 1rem;
+      color: #cbd5e1;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .badge.rsvp { background: #14532d; color: #4ade80; }
+
+    .link-box {
+      background: #1e2330;
+      border: 1px solid #2d3448;
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.8rem;
+      color: #94a3b8;
+      word-break: break-all;
+    }
+
+    .empty {
+      color: #475569;
+      font-size: 0.875rem;
+      padding: 1.5rem 1rem;
+      text-align: center;
+    }
+
+    .table-wrap {
+      background: #1e2330;
+      border: 1px solid #2d3448;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>RSVP Tracker</h1>
+    <p>Track who clicked your event button</p>
+  </header>
+
+  <div class="stats">
+    <div class="stat-card">
+      <div class="label">Total Guests</div>
+      <div class="value blue">{{ total_guests }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Responded</div>
+      <div class="value green">{{ unique_responders }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Total Clicks</div>
+      <div class="value">{{ total_clicks }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">No Response</div>
+      <div class="value">{{ total_guests - unique_responders }}</div>
+    </div>
+  </div>
+
+  <section>
+    <h2>Recent Clicks</h2>
+    <div class="table-wrap">
+      {% if clicks %}
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Action</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in clicks %}
+          <tr>
+            <td>{{ c.name }}</td>
+            <td>{{ c.email }}</td>
+            <td><span class="badge rsvp">{{ c.action }}</span></td>
+            <td>{{ c.clicked_at }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+        <div class="empty">No clicks yet — send your emails and they'll show up here.</div>
+      {% endif %}
+    </div>
+  </section>
+
+  <section>
+    <h2>All Guests & Their RSVP Links</h2>
+    <div class="table-wrap">
+      {% if guests %}
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>RSVP Link</th>
+            <th>Added</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for g in guests %}
+          <tr>
+            <td>{{ g.name }}</td>
+            <td>{{ g.email }}</td>
+            <td><code>/rsvp/{{ g.id }}</code></td>
+            <td>{{ g.created_at }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+        <div class="empty">No guests added yet. Use the API to add guests.</div>
+      {% endif %}
+    </div>
+  </section>
+
+</body>
+</html>
